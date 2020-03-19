@@ -1,5 +1,5 @@
 {
-  "name": "@connoropolous/hc-redux-middleware",
+  "name": "connoropolous-hc-redux-middleware",
   "version": "1.1.2",
   "description": "Redux middleware for seamless integration with Holochain",
   "main": "build/main/index.js",
