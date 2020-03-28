@@ -8,21 +8,21 @@ import { createAsyncAction } from 'typesafe-actions'
 export const createHolochainZomeCallAsyncAction = <ParamType, ReturnType>(
   instanceId: string,
   zome: string,
-  func: string
+  func: string,
+  timeout?: number
 ) => {
-
   const callString = [instanceId, zome, func].join('/')
 
   const action = createAsyncAction(
     callString,
     callString + '_SUCCESS',
-    callString + '_FAILURE')
-  <ParamType, ReturnType, Error>()
+    callString + '_FAILURE'
+  )<ParamType, ReturnType, Error>()
 
-  const newAction = action as (typeof action & {
-    create: (param: ParamType) => any,
-    sig: (param: ParamType) => Promise<ReturnType>
-  })
+  const newAction = action as typeof action & {
+    create: (param: ParamType) => any;
+    sig: (param: ParamType) => Promise<ReturnType>;
+  }
 
   // the action creators that are produced
   newAction.create = (params: ParamType) => {
@@ -32,7 +32,8 @@ export const createHolochainZomeCallAsyncAction = <ParamType, ReturnType>(
         holochainZomeCallAction: true,
         instanceId,
         zome,
-        func
+        func,
+        timeout
       },
       payload: params
     }
@@ -47,21 +48,21 @@ export const createHolochainZomeCallAsyncAction = <ParamType, ReturnType>(
  *
  */
 export const createHolochainAdminAsyncAction = <ParamType, ReturnType>(
-  ...segments: Array<string>
+  command: string,
+  timeout?: number
 ) => {
-
-  const callString = segments.length === 1 ? segments[0] : segments.join('/')
+  const callString = command
 
   const action = createAsyncAction(
     callString,
     callString + '_SUCCESS',
-    callString + '_FAILURE')
-  <ParamType, ReturnType, Error>()
+    callString + '_FAILURE'
+  )<ParamType, ReturnType, Error>()
 
-  const newAction = action as (typeof action & {
-    create: (param: ParamType) => any,
-    sig: (param: ParamType) => Promise<ReturnType>
-  })
+  const newAction = action as typeof action & {
+    create: (param: ParamType) => any;
+    sig: (param: ParamType) => Promise<ReturnType>;
+  }
 
   // the action creators that are produced
   newAction.create = (params: ParamType) => {
@@ -69,7 +70,8 @@ export const createHolochainAdminAsyncAction = <ParamType, ReturnType>(
       type: callString,
       meta: {
         holochainAdminAction: true,
-        callString
+        callString,
+        timeout
       },
       payload: params
     }

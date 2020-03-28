@@ -1,4 +1,4 @@
-import { Middleware, AnyAction } from 'redux';
+import { Middleware, AnyAction } from 'redux'
 
 type hcWebClientConnect = Promise<{
   call: (callStr: string) => (params: any) => Promise<string>;
@@ -9,7 +9,7 @@ type hcWebClientConnect = Promise<{
   ) => (params: any) => Promise<string>;
   close: () => Promise<any>;
   ws: any;
-}>;
+}>
 
 export const holochainMiddleware = (
   hcWc: hcWebClientConnect
@@ -19,60 +19,60 @@ export const holochainMiddleware = (
 
   const connectPromise = hcWc.then(({ call, callZome, ws }) => {
     ws.on('open', () => {
-      store.dispatch({ type: 'HOLOCHAIN_WEBSOCKET_CONNECTED' });
-    });
+      store.dispatch({ type: 'HOLOCHAIN_WEBSOCKET_CONNECTED' })
+    })
 
     ws.on('close', () => {
-      store.dispatch({ type: 'HOLOCHAIN_WEBSOCKET_DISCONNECTED' });
-    });
+      store.dispatch({ type: 'HOLOCHAIN_WEBSOCKET_DISCONNECTED' })
+    })
 
-    return { call, callZome };
-  });
+    return { call, callZome }
+  })
 
   return next => (action: AnyAction) => {
     if (
       action.meta &&
       (action.meta.holochainZomeCallAction || action.meta.holochainAdminAction)
     ) {
-      next(action); // resend the original action so the UI can change based on requests
+      next(action) // resend the original action so the UI can change based on requests
 
       return connectPromise.then(({ call, callZome }) => {
-        let callFunction;
+        let callFunction
         if (action.meta.holochainZomeCallAction) {
-          const { instanceId, zome, func } = action.meta;
-          callFunction = callZome(instanceId, zome, func);
+          const { instanceId, zome, func, timeout } = action.meta
+          callFunction = callZome(instanceId, zome, func)(timeout)
         } else {
-          callFunction = call(action.meta.callString);
+          callFunction = call(action.meta.callString)(action.meta.timeout)
         }
 
         return callFunction(action.payload)
           .then((rawResult: string) => {
             // holochain calls will strings (possibly stringified JSON)
             // while container admin calls will return parsed JSON
-            let result;
+            let result
             try {
-              result = JSON.parse(rawResult);
+              result = JSON.parse(rawResult)
             } catch (e) {
-              result = rawResult;
+              result = rawResult
             }
 
             if (result.Err !== undefined) {
               // holochain error
-              return Promise.reject(result);
+              return Promise.reject(result)
             } else if (result.Ok !== undefined) {
               // holochain Ok
               store.dispatch({
                 type: action.type + '_SUCCESS',
                 payload: result.Ok
-              });
-              return result.Ok;
+              })
+              return result.Ok
             } else {
               // unknown. Return raw result as success
               store.dispatch({
                 type: action.type + '_SUCCESS',
                 payload: result
-              });
-              return result;
+              })
+              return result
             }
           })
           .catch(err => {
@@ -80,12 +80,12 @@ export const holochainMiddleware = (
             store.dispatch({
               type: action.type + '_FAILURE',
               payload: err
-            });
-            return Promise.reject(err);
-          });
-      });
+            })
+            return Promise.reject(err)
+          })
+      })
     } else {
-      return next(action);
+      return next(action)
     }
-  };
-};
+  }
+}
