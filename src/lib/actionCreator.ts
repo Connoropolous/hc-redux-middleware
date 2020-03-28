@@ -8,8 +8,7 @@ import { createAsyncAction } from 'typesafe-actions'
 export const createHolochainZomeCallAsyncAction = <ParamType, ReturnType>(
   instanceId: string,
   zome: string,
-  func: string,
-  timeout?: number
+  func: string
 ) => {
   const callString = [instanceId, zome, func].join('/')
 
@@ -25,7 +24,7 @@ export const createHolochainZomeCallAsyncAction = <ParamType, ReturnType>(
   }
 
   // the action creators that are produced
-  newAction.create = (params: ParamType) => {
+  newAction.create = (params: ParamType, timeout?: number) => {
     return {
       type: callString,
       meta: {
@@ -48,8 +47,7 @@ export const createHolochainZomeCallAsyncAction = <ParamType, ReturnType>(
  *
  */
 export const createHolochainAdminAsyncAction = <ParamType, ReturnType>(
-  command: string,
-  timeout?: number
+  command: string
 ) => {
   const callString = command
 
@@ -65,7 +63,7 @@ export const createHolochainAdminAsyncAction = <ParamType, ReturnType>(
   }
 
   // the action creators that are produced
-  newAction.create = (params: ParamType) => {
+  newAction.create = (params: ParamType, timeout?: number) => {
     return {
       type: callString,
       meta: {
