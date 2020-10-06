@@ -1,91 +1,67 @@
-import { Middleware, AnyAction } from 'redux'
+import { Middleware, MiddlewareAPI, Dispatch, AnyAction } from 'redux';
+import {
+  AppWebsocket,
+  AdminWebsocket
+  // fakeAgentPubKey
+} from '@holochain/conductor-api';
 
-type hcWebClientConnect = Promise<{
-  call: (callStr: string) => (params: any) => Promise<string>;
-  callZome: (
-    instance: string,
-    zome: string,
-    func: string
-  ) => (params: any) => Promise<string>;
-  close: () => Promise<any>;
-  ws: any;
-}>
+export async function zomeCall(
+  connectPromise: Promise<[AppWebsocket, AdminWebsocket]>,
+  store: MiddlewareAPI<Dispatch<AnyAction>, any>,
+  action: AnyAction
+) {
+  const [app] = await connectPromise;
+  const { cell_id, zome_name, fn_name, provenance } = action.meta;
+  const { payload } = action;
+  try {
+    const response = await app.callZome({
+      cap: null,
+      cell_id,
+      zome_name,
+      fn_name,
+      provenance,
+      payload
+    });
+    store.dispatch({
+      type: action.type + '_SUCCESS',
+      payload: response
+    });
+    return response;
+  } catch (e) {
+    const error = e instanceof Error ? e : new Error(JSON.stringify(e))
+    store.dispatch({
+      type: action.type + '_FAILURE',
+      payload: error
+    });
+    throw error;
+  }
+}
 
-export const holochainMiddleware = (
-  hcWc: hcWebClientConnect
-): Middleware => store => {
+export const holochainMiddleware = ({
+  appUrl,
+  adminUrl
+}: {
+  appUrl: string;
+  adminUrl: string;
+}): Middleware => store => {
   // stuff here has the same life as the store!
   // this is how we persist a websocket connection
 
-  const connectPromise = hcWc.then(({ call, callZome, ws }) => {
-    ws.on('open', () => {
-      store.dispatch({ type: 'HOLOCHAIN_WEBSOCKET_CONNECTED' })
-    })
+  const connectPromise = Promise.all([
+    AppWebsocket.connect(appUrl),
+    AdminWebsocket.connect(adminUrl)
+  ]);
 
-    ws.on('close', () => {
-      store.dispatch({ type: 'HOLOCHAIN_WEBSOCKET_DISCONNECTED' })
-    })
-
-    return { call, callZome }
-  })
-
-  return next => (action: AnyAction) => {
-    if (
-      action.meta &&
-      (action.meta.holochainZomeCallAction || action.meta.holochainAdminAction)
-    ) {
-      next(action) // resend the original action so the UI can change based on requests
-
-      return connectPromise.then(({ call, callZome }) => {
-        let callFunction
-        if (action.meta.holochainZomeCallAction) {
-          const { instanceId, zome, func, timeout } = action.meta
-          callFunction = callZome(instanceId, zome, func)(timeout)
-        } else {
-          callFunction = call(action.meta.callString)(action.meta.timeout)
-        }
-
-        return callFunction(action.payload)
-          .then((rawResult: string) => {
-            // holochain calls will strings (possibly stringified JSON)
-            // while container admin calls will return parsed JSON
-            let result
-            try {
-              result = JSON.parse(rawResult)
-            } catch (e) {
-              result = rawResult
-            }
-
-            if (result.Err !== undefined) {
-              // holochain error
-              return Promise.reject(result)
-            } else if (result.Ok !== undefined) {
-              // holochain Ok
-              store.dispatch({
-                type: action.type + '_SUCCESS',
-                payload: result.Ok
-              })
-              return result.Ok
-            } else {
-              // unknown. Return raw result as success
-              store.dispatch({
-                type: action.type + '_SUCCESS',
-                payload: result
-              })
-              return result
-            }
-          })
-          .catch(err => {
-            // holochain or websocket error
-            store.dispatch({
-              type: action.type + '_FAILURE',
-              payload: err
-            })
-            return Promise.reject(err)
-          })
-      })
+  return next => async (action: AnyAction) => {
+    if (action.meta && action.meta.hcZomeCallAction) {
+      // zome call action
+      next(action); // resend the original action so the UI can change based on requests
+      return zomeCall(connectPromise, store, action);
+    } else if (action.meta && action.meta.hcAdminAction) {
+      // admin action
+      next(action);
     } else {
-      return next(action)
+      next(action);
     }
-  }
-}
+  };
+};
