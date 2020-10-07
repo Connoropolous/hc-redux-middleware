@@ -33,6 +33,15 @@ const create = () => {
   const app_info = await client.appInfo({ app_id: 'test-app' });
   const cell_id = app_info.cell_data[0][0];
 
+  const agent_address = await client.callZome({
+    cap: null,
+    cell_id,
+    zome_name: 'acorn_profiles',
+    fn_name: 'fetch_agent_address',
+    payload: null,
+    provenance: cell_id[1]
+  })
+
   test('It passes non-holochain actions to the next reducer', async t => {
     let { next, invoke } = create();
 
@@ -51,7 +60,7 @@ const create = () => {
       handle: 'ct',
       status: 'Online',
       avatar_url: 'test',
-      address: '123123'
+      address: agent_address
     };
     const actionCreator = createZomeCallAsyncAction(
       'acorn_profiles',
@@ -63,9 +72,19 @@ const create = () => {
     };
     const result = await invoke(actionCreator.create(param));
 
+    const meta = {
+      cell_id: cell_id,
+      zome_name: 'acorn_profiles',
+      fn_name: 'create_whoami',
+      provenance: cell_id[1]
+    }
+
     t.deepEqual(result.entry, profile);
     t.true(next.calledWith(actionCreator.create(param)));
-    t.true(store.dispatch.calledWith(actionCreator.success(result)));
+    t.true(store.dispatch.calledWith({
+      ...actionCreator.success(result),
+      meta
+    }));
   });
 
   test('It passes holochain actions and dispatches new error action on holochain error. Err is unwrapped ', async t => {
@@ -79,6 +98,13 @@ const create = () => {
       cellIdString: cellIdToString(cell_id),
       payload: null
     };
+
+    const meta = {
+      cell_id: cell_id,
+      zome_name: 'acorn_profiles',
+      fn_name: 'create_whoami',
+      provenance: cell_id[1]
+    }
 
     try {
       await invoke(actionCreator.create(param));
@@ -95,7 +121,10 @@ const create = () => {
       );
       t.deepEqual(result, e);
       t.true(next.calledWith(actionCreator.create(param)));
-      t.deepEqual(store.dispatch.lastCall.args[0], actionCreator.failure(e));
+      t.deepEqual(store.dispatch.lastCall.args[0], {
+        ...actionCreator.failure(e),
+        meta // supposed to be this way, key = value
+      });
     }
   });
 })();

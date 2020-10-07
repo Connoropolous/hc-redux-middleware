@@ -24,13 +24,25 @@ export async function zomeCall(
     });
     store.dispatch({
       type: action.type + '_SUCCESS',
+      meta: {
+        cell_id,
+        zome_name,
+        fn_name,
+        provenance
+      },
       payload: response
     });
     return response;
   } catch (e) {
-    const error = e instanceof Error ? e : new Error(JSON.stringify(e))
+    const error = e instanceof Error ? e : new Error(JSON.stringify(e));
     store.dispatch({
       type: action.type + '_FAILURE',
+      meta: {
+        cell_id,
+        zome_name,
+        fn_name,
+        provenance
+      },
       payload: error
     });
     throw error;
