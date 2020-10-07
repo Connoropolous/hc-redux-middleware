@@ -1,2 +1,8 @@
-export { holochainMiddleware } from './lib/middleware'
-export { createZomeCallAsyncAction, createAdminAsyncAction } from './lib/actionCreator'
+export { holochainMiddleware } from './lib/middleware';
+export {
+  createZomeCallAsyncAction,
+  hashFromString,
+  hashToString,
+  cellIdFromString,
+  cellIdToString
+} from './lib/actionCreator';
