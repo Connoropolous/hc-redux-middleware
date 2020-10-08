@@ -11,10 +11,8 @@ import {
 } from './actionCreator';
 import { AppWebsocket } from '@holochain/conductor-api';
 
-const urlConfig = {
-  appUrl: 'ws://localhost:8888',
-  adminUrl: 'ws://localhost:1234'
-};
+const appUrlConfig = 'ws://localhost:8888';
+const HOLOCHAIN_RUN_DEV_APP_ID = 'test-app'
 
 const create = () => {
   const store = {
@@ -23,14 +21,14 @@ const create = () => {
   };
   const next = sinon.spy();
   const invoke = (action: any) =>
-    holochainMiddleware(urlConfig)(store)(next)(action);
+    holochainMiddleware(appUrlConfig)(store)(next)(action);
 
   return { store, next, invoke };
 };
 
 (async () => {
-  const client = await AppWebsocket.connect('ws://localhost:8888');
-  const app_info = await client.appInfo({ app_id: 'test-app' });
+  const client = await AppWebsocket.connect(appUrlConfig);
+  const app_info = await client.appInfo({ app_id: HOLOCHAIN_RUN_DEV_APP_ID });
   const cell_id = app_info.cell_data[0][0];
 
   const agent_address = await client.callZome({
@@ -40,7 +38,7 @@ const create = () => {
     fn_name: 'fetch_agent_address',
     payload: null,
     provenance: cell_id[1]
-  })
+  });
 
   test('It passes non-holochain actions to the next reducer', async t => {
     let { next, invoke } = create();
@@ -77,14 +75,16 @@ const create = () => {
       zome_name: 'acorn_profiles',
       fn_name: 'create_whoami',
       provenance: cell_id[1]
-    }
+    };
 
     t.deepEqual(result.entry, profile);
     t.true(next.calledWith(actionCreator.create(param)));
-    t.true(store.dispatch.calledWith({
-      ...actionCreator.success(result),
-      meta
-    }));
+    t.true(
+      store.dispatch.calledWith({
+        ...actionCreator.success(result),
+        meta
+      })
+    );
   });
 
   test('It passes holochain actions and dispatches new error action on holochain error. Err is unwrapped ', async t => {
@@ -104,7 +104,7 @@ const create = () => {
       zome_name: 'acorn_profiles',
       fn_name: 'create_whoami',
       provenance: cell_id[1]
-    }
+    };
 
     try {
       await invoke(actionCreator.create(param));

@@ -97,39 +97,3 @@ export const createZomeCallAsyncAction = (
 
   return newAction;
 };
-
-/**
- *
- * Function that creates action creators for holochain conductor admin calls
- *
- */
-export const createAdminAsyncAction = <ParamType, ReturnType>(
-  command: string
-) => {
-  const callString = command;
-
-  const action = createAsyncAction(
-    callString,
-    callString + '_SUCCESS',
-    callString + '_FAILURE'
-  )<ParamType, ReturnType, Error>();
-
-  const newAction = action as typeof action & {
-    create: (param: ParamType) => any;
-    sig: (param: ParamType) => Promise<ReturnType>;
-  };
-
-  // the action creators that are produced
-  newAction.create = (params: ParamType) => {
-    return {
-      type: callString,
-      meta: {
-        hcAdminAction: true,
-        callString
-      },
-      payload: params
-    };
-  };
-
-  return newAction;
-};

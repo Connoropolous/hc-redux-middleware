@@ -1,16 +1,14 @@
 import { Middleware, MiddlewareAPI, Dispatch, AnyAction } from 'redux';
 import {
   AppWebsocket,
-  AdminWebsocket
-  // fakeAgentPubKey
 } from '@holochain/conductor-api';
 
 export async function zomeCall(
-  connectPromise: Promise<[AppWebsocket, AdminWebsocket]>,
+  connectPromise: Promise<AppWebsocket>,
   store: MiddlewareAPI<Dispatch<AnyAction>, any>,
   action: AnyAction
 ) {
-  const [app] = await connectPromise;
+  const app = await connectPromise;
   const { cell_id, zome_name, fn_name, provenance } = action.meta;
   const { payload } = action;
   try {
@@ -49,29 +47,15 @@ export async function zomeCall(
   }
 }
 
-export const holochainMiddleware = ({
-  appUrl,
-  adminUrl
-}: {
-  appUrl: string;
-  adminUrl: string;
-}): Middleware => store => {
+export const holochainMiddleware = (appUrl: string): Middleware => store => {
   // stuff here has the same life as the store!
   // this is how we persist a websocket connection
-
-  const connectPromise = Promise.all([
-    AppWebsocket.connect(appUrl),
-    AdminWebsocket.connect(adminUrl)
-  ]);
-
+  const connectPromise = AppWebsocket.connect(appUrl);
   return next => async (action: AnyAction) => {
     if (action.meta && action.meta.hcZomeCallAction) {
       // zome call action
       next(action); // resend the original action so the UI can change based on requests
       return zomeCall(connectPromise, store, action);
-    } else if (action.meta && action.meta.hcAdminAction) {
-      // admin action
-      next(action);
     } else {
       next(action);
     }
