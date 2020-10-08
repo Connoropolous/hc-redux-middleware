@@ -86,6 +86,7 @@ export const createZomeCallAsyncAction = (
       type: callString,
       meta: {
         hcZomeCallAction: true,
+        cellIdString: param.cellIdString,
         cell_id,
         zome_name,
         fn_name,
