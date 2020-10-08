@@ -71,10 +71,7 @@ const create = () => {
     const result = await invoke(actionCreator.create(param));
 
     const meta = {
-      cell_id: cell_id,
-      zome_name: 'acorn_profiles',
-      fn_name: 'create_whoami',
-      provenance: cell_id[1]
+      cellIdString: cellIdToString(cell_id),
     };
 
     t.deepEqual(result.entry, profile);
@@ -100,10 +97,7 @@ const create = () => {
     };
 
     const meta = {
-      cell_id: cell_id,
-      zome_name: 'acorn_profiles',
-      fn_name: 'create_whoami',
-      provenance: cell_id[1]
+      cellIdString: cellIdToString(cell_id),
     };
 
     try {

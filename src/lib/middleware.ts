@@ -3,6 +3,10 @@ import {
   AppWebsocket,
 } from '@holochain/conductor-api';
 
+import {
+  cellIdToString
+} from './actionCreator'
+
 export async function zomeCall(
   connectPromise: Promise<AppWebsocket>,
   store: MiddlewareAPI<Dispatch<AnyAction>, any>,
@@ -23,10 +27,7 @@ export async function zomeCall(
     store.dispatch({
       type: action.type + '_SUCCESS',
       meta: {
-        cell_id,
-        zome_name,
-        fn_name,
-        provenance
+        cellIdString: cellIdToString(cell_id)
       },
       payload: response
     });
@@ -36,10 +37,7 @@ export async function zomeCall(
     store.dispatch({
       type: action.type + '_FAILURE',
       meta: {
-        cell_id,
-        zome_name,
-        fn_name,
-        provenance
+        cellIdString: cellIdToString(cell_id)
       },
       payload: error
     });
