@@ -105,9 +105,9 @@ const create = () => {
     } catch (result) {
       const e = new Error(
         JSON.stringify({
-          type: 'Error',
+          type: 'error',
           data: {
-            type: 'RibosomeError',
+            type: 'ribosome_error',
             data:
               'Wasm error while working with Ribosome: Zome("failed to deserialize args: FromBytes(\\"invalid type: unit value, expected struct Profile\\")")'
           }

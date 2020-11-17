@@ -1,41 +1,27 @@
-import { AgentPubKey } from '@holochain/conductor-api';
+import { HoloHash, AgentPubKey } from '@holochain/conductor-api';
 import { createAsyncAction } from 'typesafe-actions';
 
-export type Hash = {
-  hash: Buffer;
-  hash_type: Buffer;
-};
-export type CellId = [Hash, AgentPubKey];
+export type CellId = [HoloHash, AgentPubKey];
 
-const HASH_DIVIDER = '[:hash_divider:]';
-export function hashToString(hash: Hash) {
+export function hashToString(hash: HoloHash) {
   // nodejs
   if (typeof window === 'undefined') {
-    return (
-      hash.hash_type.toString('hex') + HASH_DIVIDER + hash.hash.toString('hex')
-    );
+    return hash.toString('hex');
   }
   // browser
   else {
-    return hash.hash_type.toString() + HASH_DIVIDER + hash.hash.toString();
+    return hash.toString();
   }
 }
 
-export function hashFromString(str: string) {
-  const [hashtypestring, hashstring] = str.split(HASH_DIVIDER);
+export function hashFromString(str: string): HoloHash {
   // nodejs
   if (typeof window === 'undefined') {
-    return {
-      hash: Buffer.from(hashstring, 'hex'),
-      hash_type: Buffer.from(hashtypestring, 'hex')
-    };
+    return Buffer.from(str, 'hex');
   }
   // browser
   else {
-    return {
-      hash: Buffer.from(hashstring.split(',')),
-      hash_type: Buffer.from(hashtypestring.split(','))
-    };
+    return Buffer.from(str.split(','));
   }
 }
 
