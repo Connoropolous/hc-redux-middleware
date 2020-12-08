@@ -28,7 +28,7 @@ const create = () => {
 
 (async () => {
   const client = await AppWebsocket.connect(appUrlConfig);
-  const app_info = await client.appInfo({ app_id: HOLOCHAIN_RUN_DEV_APP_ID });
+  const app_info = await client.appInfo({ installed_app_id: HOLOCHAIN_RUN_DEV_APP_ID });
   const cell_id = app_info.cell_data[0][0];
 
   const agent_address = await client.callZome({
