@@ -40,7 +40,7 @@
     "node": ">=8.9"
   },
   "dependencies": {
-    "@holochain/conductor-api": "0.0.1-dev.14",
+    "@holochain/conductor-api": "0.0.1",
     "redux": "^4.0.5",
     "typesafe-actions": "^2.2.0"
   },
