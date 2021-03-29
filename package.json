@@ -40,7 +40,7 @@
     "node": ">=8.9"
   },
   "dependencies": {
-    "@holochain/conductor-api": "0.0.1",
+    "@holochain/conductor-api": "github:holochain/holochain-conductor-api#Connoropolous-patch-2",
     "redux": "^4.0.5",
     "typesafe-actions": "^2.2.0"
   },
